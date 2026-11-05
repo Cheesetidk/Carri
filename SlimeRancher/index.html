@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<!--
+  Slime Rancher | OFFLINE BUILD (split version, build 2026-08-20)
+  Original single-file build: https://dev.snubby.top/ & https://slimeranchers.com/
+  Files: index.html + part1.js (loader/code) + part2-4.js (game data). Keep them in the same folder.
+-->
+<html>
+<head>
+<meta charset="utf-8">
+<link rel="shortcut icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAMAAACdt4HsAAAC/VBMVEUAAAD+/v7+///z+/v1+P8MWPxU2NL39vPp9/b///9A1s8Ydez7/f3///+dehYKU/8jbm3///////8KU/////+sgwz///////821czT6umk6ufb9vX///+lfAD///8gZf2y7eoKU/8MVf8KU/+1iQOmfQL9/PkrlZPYogB54dxk3NbH8fHl7+2J498KU/////8VWv////8oeXdvwr6+2tlopqS+7euEtrT///////+qgQn////+/v/9/v8KU/8KU/9Zw8g6zseZztJFzclhubUKU//+//////////////6mfQAurr1KkI56rKqVv72U4ecyb/8KU/+pfgAKU/8KU/+mfQH///8hl9w6w8GCxMtFuLI+hom92vnQ9PJBle7GlgSxhgW7mTT///////////8KU//02YkZZF9tnP3osQ2syPxLxsNHs95cj5Si3duhxMPKpDXB0/////////8NVf+Ntvs6rqlDn5vXtlSkv//LsWPt+vrZ5P8/eP/08OL///9zwd3m27rj17Lu8/8vbf93n/+1y/85LhUy1Ms0mJUzn5s0o540nJg0qKMzq6U1gX7Zcrgzsas0lZE1jYo2b281ko4zta8xv7gzubI1fnwyvLU0pqA0iYYyrqgxz8Yxw7s1hII1e3oxxr42d3YWbmwxysE0kIwOXWAxzMQx0cg4Mho1dHM2cnE2enc3Tjwbgn/9uuIYc3A3WEgRYvE3PScpi4kZe3gvbW4glpEmg4M4NyD2q9ngeb0nqqUkpZ8jnpgYZmg2ZFg4RDD/u+PkhcMeeoM1fXERYmP8vgAdheTxodPbcri/dK8dkIsdiYQ2bGL7tN8oi9XsmM3pj8nqfMI2cmcUauUuocr1gsielb8qubItpJ81jYArtNL9iM5rs8XMfbouornUdLd4eJgddncxXU71wyxxytEtvsopsq0tmKwvmJpndo/yud/av960w9qZs82unsa3hrwjgLi2d6yQd58rjZEZcngpdHL/zDMgfc8he6qhc6JLeIaFosHgevnDAAAAh3RSTlMA+/P7Bf77P/ro/P74RBEJ/uzZr4R8Yir9+/r44CAZ/fft4cXDPQv++/j49vb2eh8fEf78+Pj39826p5VwMzMW/v78/PzRxbRaU0n++vj39fCc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">
+<title>Slime Rancher | OFFLINE BUILD</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+        html, body {
+            touch-action: manipulation;
+            -ms-touch-action: manipulation;
+        }
+
+        #gameContainer {
+            position: fixed;
+            top: 0px;
+            left: 0px;
+            bottom: 0px;
+            right: 0px;
+            width: 100%;
+            height: 100%;
+            border: none;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            /* Fix selection glitch */
+            -webkit-user-select: none; 
+            -khtml-user-select: none; 
+            -moz-user-select: none; 
+            -o-user-select: none; 
+            user-select: none;
+            touch-action: manipulation;
+        }
+
+        canvas {
+            position: fixed;
+            top: 0px;
+            left: 0px;
+            bottom: 0px;
+            right: 0px;
+            width: 100%;
+            height: 100%;
+            border: none;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            z-index: 2;
+            /* Fix selection glitch */
+            -webkit-user-select: none; 
+            -khtml-user-select: none; 
+            -moz-user-select: none; 
+            -o-user-select: none; 
+            user-select: none;
+            touch-action: manipulation;
+</style>
+</head>
+<body style="text-align: center; background-color: #000000;">
+<h1 id="message" style="color: gray; font-family: sans-serif; user-select: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 1;">
+  This build is from <a style="color:red;">2026-08-20</a><br>
+  Check <a href="https://dev.snubby.top/">here</a> for updates.<br><br>
+  <span id="status" style="font-size: 14px;">Loading part 0/4...</span>
+</h1>
+<div id="gameContainer"></div>
+
+<script>
+(function () {
+  var parts = ["part1.js", "part2.js", "part3.js", "part4.js"];
+  var status = document.getElementById("status");
+
+  function loadPart(i) {
+    if (i >= parts.length) return start();
+    status.textContent = "Loading part " + (i + 1) + "/" + parts.length + "...";
+    var s = document.createElement("script");
+    s.src = parts[i];
+    s.onload = function () { loadPart(i + 1); };
+    s.onerror = function () {
+      status.textContent = "Failed to load " + parts[i] + " (make sure all files are in the same folder).";
+      status.style.color = "red";
+    };
+    document.body.appendChild(s);
+  }
+
+  function start() {
+    status.textContent = "Starting game...";
+    var P = window.SR_PARTS;
+    window.embeddedJsonData = {
+      "companyName": "Snubs",
+      "productName": "Slime Rancher Web",
+      "dataUrl": P.data.join(""),
+      "wasmCodeUrl": P.wasmCodeUrl,
+      "wasmFrameworkUrl": P.wasmFrameworkUrl,
+      "TOTAL_MEMORY": 251658240,
+      "graphicsAPI": ["WebGL 2.0", "WebGL 1.0"],
+      "webglContextAttributes": {"preserveDrawingBuffer": true},
+      "splashScreenStyle": "Dark",
+      "backgroundColor": "#000000"
+    };
+    delete window.SR_PARTS; // free the chunk references
+    UnityLoader.instantiate("gameContainer");
+  }
+
+  loadPart(0);
+})();
+</script>
+</body>
+</html>
