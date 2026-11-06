@@ -6,7 +6,7 @@
 "wasmCodeUrl": "game.wasm.code.unityweb",
 "wasmFrameworkUrl": "game.wasm.framework.unityweb",
 "graphicsAPI": ["WebGL 2.0","WebGL 1.0"],
-"webglContextAttributes": {"preserveDrawingBuffer": false},
+"webglContextAttributes": {"preserveDrawingBuffer": false, "antialias": false},
 "splashScreenStyle": "Dark",
 "backgroundColor": "#231F20",
 "developmentBuild": false,

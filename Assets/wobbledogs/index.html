@@ -44,15 +44,12 @@ window.fetch = async function(input, init) {
   const url = typeof input === "string" ? input : (input && input.url);
   const entry = assetMap.get(normalize(url));
   if (entry) {
-    const buf = await entry;
-    return new Response(buf.slice(0), {status: 200, statusText: "OK", headers: {"Content-Type": "application/octet-stream", "Content-Length": String(buf.byteLength)}});
+    return originalFetch(entry, init);
   }
   return originalFetch(input, init);
 };
 function XHRWrapper() {
   let real = null;
-  let intercepted = false;
-  let url = null;
   const listeners = {};
   const state = {readyState: 0, status: 0, statusText: "", response: null, responseText: "", responseType: ""};
   let _onload = null;
@@ -69,55 +66,31 @@ function XHRWrapper() {
   Object.defineProperty(api, "onerror", {get: function() { return real ? real.onerror : _onerror; }, set: function(v) { _onerror = v; if (real) real.onerror = v; }});
   Object.defineProperty(api, "onprogress", {get: function() { return real ? real.onprogress : _onprogress; }, set: function(v) { _onprogress = v; if (real) real.onprogress = v; }});
   api.open = function(method, u) {
-    url = u;
-    intercepted = assetMap.has(normalize(u));
-    if (!intercepted) {
-      real = new OriginalXHR();
-      real.responseType = state.responseType;
-      real.onload = _onload;
-      real.onerror = _onerror;
-      real.onprogress = _onprogress;
-      return real.open.apply(real, arguments);
-    }
-    state.readyState = 1;
-    return undefined;
+    real = new OriginalXHR();
+    real.responseType = state.responseType;
+    real.onload = _onload;
+    real.onerror = _onerror;
+    real.onprogress = _onprogress;
+    Object.keys(listeners).forEach(function(type) {
+      listeners[type].forEach(function(cb) { real.addEventListener(type, cb); });
+      listeners[type] = [];
+    });
+    const args = Array.prototype.slice.call(arguments);
+    args[1] = assetMap.get(normalize(u)) || u;
+    return real.open.apply(real, args);
   };
   api.setRequestHeader = function() { if (real) return real.setRequestHeader.apply(real, arguments); };
   api.addEventListener = function(type, cb) {
-    if (real && !intercepted) return real.addEventListener(type, cb);
+    if (real) return real.addEventListener(type, cb);
     if (!listeners[type]) listeners[type] = [];
     listeners[type].push(cb);
   };
   api.removeEventListener = function(type, cb) {
-    if (real && !intercepted) return real.removeEventListener(type, cb);
+    if (real) return real.removeEventListener(type, cb);
     if (listeners[type]) listeners[type] = listeners[type].filter(function(x) { return x !== cb; });
   };
   api.send = function(body) {
-    if (!intercepted) return real.send(body);
-    (async function() {
-      const buf = await assetMap.get(normalize(url));
-      if (state.responseType === "text") {
-        state.response = new TextDecoder().decode(buf);
-        state.responseText = state.response;
-      } else if (state.responseType === "json") {
-        const t = new TextDecoder().decode(buf);
-        state.response = JSON.parse(t);
-        state.responseText = t;
-      } else {
-        state.response = buf;
-        state.responseText = "";
-      }
-      state.status = 200;
-      state.statusText = "OK";
-      state.readyState = 4;
-      const progressEvent = new ProgressEvent("progress", {lengthComputable: true, loaded: buf.byteLength, total: buf.byteLength});
-      (listeners.progress || []).forEach(function(cb) { try { cb(progressEvent); } catch (e) {} });
-      if (typeof _onprogress === "function") _onprogress(progressEvent);
-      const loadEvent = new Event("load");
-      (listeners.load || []).forEach(function(cb) { try { cb(loadEvent); } catch (e) {} });
-      if (typeof _onload === "function") _onload(loadEvent);
-    })();
-    return undefined;
+    return real.send(body);
   };
   return api;
 }
@@ -128,19 +101,16 @@ const assetPromises = ASSETS.map(function(item) {
   return (async function() {
     const originalUrl = BASE + name;
     const chunkUrls = Array.from({length: count}, function(_, i) { return BASE + name + String(i).padStart(2, "0"); });
-    const buffers = await Promise.all(chunkUrls.map(async function(u) {
+    const blobs = await Promise.all(chunkUrls.map(async function(u) {
       const res = await originalFetch(u);
       if (!res.ok) throw new Error("Failed to load " + u);
-      const buf = await res.arrayBuffer();
+      const blob = await res.blob();
       loadedChunks += 1;
       setProgress((loadedChunks / totalChunks) * 0.4, "Loading assets");
-      return buf;
+      return blob;
     }));
-    const total = buffers.reduce(function(a, b) { return a + b.byteLength; }, 0);
-    const merged = new Uint8Array(total);
-    let offset = 0;
-    for (const b of buffers) { merged.set(new Uint8Array(b), offset); offset += b.byteLength; }
-    assetMap.set(normalize(originalUrl), Promise.resolve(merged.buffer));
+    const assetBlob = new Blob(blobs, {type: "application/octet-stream"});
+    assetMap.set(normalize(originalUrl), URL.createObjectURL(assetBlob));
   })();
 });
 setProgress(0, "Loading assets");
