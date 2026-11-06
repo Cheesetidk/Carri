@@ -18,7 +18,7 @@ html, body {margin: 0; padding: 0; height: 100%; background: #111111; color: #ff
 </style>
 <script>
 const BASE = "";
-const ASSETS = [["Build/game.data.unityweb", 27], ["Build/game.wasm.code.unityweb", 4]];
+const ASSETS = [["build/game.data.unityweb", 27], ["build/game.wasm.code.unityweb", 4]];
 const originalFetch = window.fetch.bind(window);
 const OriginalXHR = window.XMLHttpRequest;
 const assetMap = new Map();
@@ -146,7 +146,7 @@ const assetPromises = ASSETS.map(function(item) {
 setProgress(0, "Loading assets");
 Promise.all(assetPromises).then(function() {
   setProgress(0.4, "Loading game");
-  window.unityInstance = UnityLoader.instantiate("unityContainer", BASE + "Build/game.json", {onProgress: function(instance, p) {
+  window.unityInstance = UnityLoader.instantiate("unityContainer", BASE + "build/game.json", {onProgress: function(instance, p) {
     const frac = 0.4 + 0.6 * p;
     setProgress(frac, p >= 1 ? "Starting" : "Loading game");
     if (p >= 1) hideLoading();
@@ -156,7 +156,7 @@ Promise.all(assetPromises).then(function() {
   console.error(e);
 });
 </script>
-<script src="Build/UnityLoader.js"></script>
+<script src="build/UnityLoader.js"></script>
 </head>
 <body>
 <div id="loading">
