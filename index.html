@@ -29,13 +29,14 @@
   body{
     font-family:var(--ui);
     color:var(--ink);
-    background:linear-gradient(180deg,#0b121e 0%,#101b2c 55%,#16263b 100%) fixed;
+    background:#0b121e;
     -webkit-font-smoothing:antialiased;
     overflow-x:hidden;
     padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom);
   }
-  #rain{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none}
-  .fog{position:fixed;inset:-20%;z-index:0;pointer-events:none;filter:blur(60px);opacity:.55}
+  .backdrop-video{position:fixed;inset:0;width:100%;height:100%;z-index:0;object-fit:cover;pointer-events:none;opacity:.5;filter:brightness(.58) saturate(.82)}
+  .backdrop-shade{position:fixed;inset:0;z-index:0;pointer-events:none;background:linear-gradient(180deg,rgba(8,13,22,.55),rgba(8,13,22,.76) 70%,rgba(8,13,22,.88))}
+  .fog{position:fixed;inset:-20%;z-index:0;pointer-events:none;filter:blur(60px);opacity:.32}
   .fog i{position:absolute;border-radius:50%;display:block}
   .fog i:nth-child(1){width:55vmax;height:40vmax;left:-10%;top:5%;background:radial-gradient(closest-side,rgba(88,128,170,.55),transparent);animation:fog1 38s ease-in-out infinite alternate}
   .fog i:nth-child(2){width:50vmax;height:38vmax;right:-8%;top:30%;background:radial-gradient(closest-side,rgba(130,112,184,.4),transparent);animation:fog2 46s ease-in-out infinite alternate}
@@ -89,7 +90,7 @@
   }
   .search::placeholder{color:#74869b}
   .search:focus{border-color:rgba(143,184,216,.5);box-shadow:0 0 0 4px rgba(143,184,216,.1)}
-  .tab:focus-visible,.snd:focus-visible,.card:focus-visible{outline:2px solid var(--mist);outline-offset:3px}
+  .tab:focus-visible,.card:focus-visible,.media-back:focus-visible,.media-refresh:focus-visible,.player button:focus-visible,.player input:focus-visible{outline:2px solid var(--mist);outline-offset:3px}
 
   .grid{
     display:grid;gap:22px;
@@ -136,22 +137,6 @@
     font:300 9.5rem/1 var(--display);color:rgba(255,255,255,.09);
     user-select:none;pointer-events:none;
   }
-  .card .rain{position:absolute;inset:0;overflow:hidden;z-index:0;pointer-events:none;opacity:.55;transition:opacity .4s}
-  .card:hover .rain{opacity:1}
-  .card .rain::before{
-    content:"";position:absolute;left:0;right:0;top:-200px;height:calc(100% + 200px);
-    background:
-      linear-gradient(to bottom,transparent,rgba(205,225,255,.55),transparent) 9% 0/1px 100px repeat-y,
-      linear-gradient(to bottom,transparent,rgba(205,225,255,.4),transparent) 23% 30px/1px 50px repeat-y,
-      linear-gradient(to bottom,transparent,rgba(205,225,255,.5),transparent) 38% 10px/1px 200px repeat-y,
-      linear-gradient(to bottom,transparent,rgba(205,225,255,.35),transparent) 52% 60px/1px 40px repeat-y,
-      linear-gradient(to bottom,transparent,rgba(205,225,255,.5),transparent) 67% 20px/1px 100px repeat-y,
-      linear-gradient(to bottom,transparent,rgba(205,225,255,.4),transparent) 81% 70px/1px 50px repeat-y,
-      linear-gradient(to bottom,transparent,rgba(205,225,255,.45),transparent) 93% 0/1px 200px repeat-y;
-    animation:fall 2.4s linear infinite;
-    transform:skewX(-6deg);
-  }
-  @keyframes fall{to{transform:translateY(200px) skewX(-6deg)}}
   .card::after{
     content:"";position:absolute;inset:0;z-index:1;pointer-events:none;
     background:radial-gradient(260px circle at var(--mx) var(--my), rgba(255,255,255,.16), transparent 60%);
@@ -196,18 +181,57 @@
   .note code{background:rgba(143,184,216,.12);padding:2px 7px;border-radius:6px;font-size:.9em;color:var(--ink)}
   .count{color:var(--ink-soft);font-size:.9rem;min-height:1.2em;margin:0 4px 16px}
 
-  .snd{
-    position:fixed;right:max(18px,env(safe-area-inset-right));bottom:max(18px,env(safe-area-inset-bottom));z-index:5;
-    display:flex;align-items:center;gap:10px;
-    background:rgba(20,32,51,.72);border:1px solid rgba(143,184,216,.2);color:var(--ink);
-    font:500 .88rem var(--ui);padding:10px 16px;border-radius:999px;cursor:pointer;
-    backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
-    transition:background .3s,border-color .3s;
+  .media-heading{display:flex;align-items:center;justify-content:space-between;gap:14px;margin:6px 0 20px}
+  .media-title{margin:0;font:300 clamp(1.7rem,4vw,2.4rem)/1.1 var(--display)}
+  .media-actions{display:flex;gap:10px}
+  .media-back,.media-refresh,.player button{
+    border:1px solid rgba(220,235,255,.2);color:var(--ink);background:rgba(225,238,255,.09);
+    font:500 .92rem var(--ui);padding:10px 15px;border-radius:999px;cursor:pointer;
+    backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+    transition:background .2s,border-color .2s,transform .2s;
   }
-  .snd:hover{background:rgba(35,55,84,.8)}
-  .snd[aria-pressed="true"]{border-color:rgba(143,184,216,.5)}
-  .snd .dot{width:8px;height:8px;border-radius:50%;background:#5b6b80;transition:background .3s, box-shadow .3s}
-  .snd[aria-pressed="true"] .dot{background:var(--moss);box-shadow:0 0 10px var(--moss)}
+  .media-back:hover,.media-refresh:hover,.player button:hover{background:rgba(225,238,255,.17);border-color:rgba(220,235,255,.38);transform:translateY(-1px)}
+  .media-card{
+    appearance:none;width:100%;padding:0;text-align:left;font:inherit;
+    border:1px solid rgba(255,255,255,.18);
+    background:linear-gradient(145deg,rgba(255,255,255,.18),rgba(255,255,255,.055));
+    box-shadow:0 18px 48px rgba(0,0,0,.28),inset 0 1px rgba(255,255,255,.19);
+    backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+  }
+  .media-card .cover{opacity:.76}
+  .media-card:hover .cover{opacity:.94}
+  .media-card .label{background:linear-gradient(to top,rgba(5,9,16,.91),rgba(5,9,16,.55) 60%,transparent)}
+  .media-card .meta{display:block;color:rgba(232,238,246,.72);font:400 .82rem var(--ui);margin-top:5px}
+  .episode-card .initial{font-size:clamp(3rem,8vw,6rem);right:12px;top:15px}
+  .library-note{max-width:680px}
+  .library-note code{word-break:break-word}
+  .player{
+    position:fixed;inset:0;z-index:10;display:grid;place-items:center;
+    padding:clamp(10px,3vw,34px);background:rgba(3,6,12,.88);
+    backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  }
+  .player-shell{
+    position:relative;width:min(100%,1400px);aspect-ratio:16/9;max-height:calc(100dvh - 40px);
+    display:flex;align-items:center;justify-content:center;overflow:hidden;border-radius:18px;
+    background:#000;box-shadow:0 24px 90px rgba(0,0,0,.65);
+  }
+  .player-shell:fullscreen,.player-shell:-webkit-full-screen{width:100vw;height:100dvh;max-height:none;aspect-ratio:auto;border-radius:0}
+  .player video{width:100%;height:100%;object-fit:contain}
+  .player-top,.player-controls{
+    position:absolute;left:0;right:0;z-index:1;display:flex;align-items:center;gap:12px;
+    padding:18px clamp(14px,3vw,30px);transition:opacity .35s;
+  }
+  .player-top{top:0;justify-content:space-between;background:linear-gradient(rgba(0,0,0,.72),transparent)}
+  .player-controls{bottom:0;flex-wrap:wrap;background:linear-gradient(transparent,rgba(0,0,0,.82))}
+  .player-name{font:500 1rem var(--ui);text-shadow:0 1px 8px #000}
+  .player button{padding:9px 13px;background:rgba(255,255,255,.14);white-space:nowrap}
+  .player-play{min-width:88px}
+  .player-time{font:400 .83rem var(--ui);font-variant-numeric:tabular-nums;color:#e5eaf2}
+  .player-seek{flex:1 1 160px;min-width:100px;accent-color:#cfe7ff}
+  .player-volume{width:clamp(70px,12vw,130px);accent-color:#cfe7ff}
+  .player-shell.idle .player-top,.player-shell.idle .player-controls{opacity:0;pointer-events:none}
+  .player-error{position:absolute;inset:0;display:grid;place-items:center;text-align:center;padding:24px;color:var(--ink)}
+  .player-error[hidden]{display:none}
   .toast{
     position:fixed;left:50%;bottom:76px;z-index:6;transform:translate(-50%,20px);
     background:rgba(20,32,51,.95);border:1px solid rgba(143,184,216,.3);
@@ -223,6 +247,11 @@
     .search{flex:1 1 100%}
     .grid{grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px}
     .card .initial{font-size:7rem}
+    .media-heading{align-items:flex-start}
+    .media-actions{flex-direction:column}
+    .player-shell{width:100%;aspect-ratio:auto;height:min(70vh,520px)}
+    .player-controls{gap:8px;padding:12px}
+    .player-volume-label{display:none}
   }
   @media (prefers-reduced-motion:reduce){
     *,*::before,*::after{animation-duration:.01ms !important;animation-iteration-count:1 !important;transition-duration:.01ms !important}
@@ -231,7 +260,8 @@
 </style>
 </head>
 <body>
-<canvas id="rain" aria-hidden="true"></canvas>
+<video class="backdrop-video" id="backdrop" autoplay muted loop playsinline preload="metadata" aria-hidden="true"></video>
+<div class="backdrop-shade" aria-hidden="true"></div>
 <div class="fog" aria-hidden="true"><i></i><i></i><i></i></div>
 
 <div class="wrap">
@@ -252,15 +282,39 @@
   </section>
 
   <section id="view-movies" role="tabpanel" hidden>
-    <div class="note">
-      <h2>Movies &amp; shows</h2>
-      <p>Nothing here yet. This tab is set up and waiting.</p>
+    <div class="media-heading">
+      <h2 class="media-title" id="media-title">Shows</h2>
+      <div class="media-actions">
+        <button class="media-back" id="media-back" type="button" hidden>← Back</button>
+        <button class="media-refresh" id="media-refresh" type="button">↻ Refresh library</button>
+      </div>
     </div>
+    <div class="count" id="media-count" aria-live="polite"></div>
+    <div class="grid" id="media-grid"></div>
+    <div class="note library-note" id="media-note" hidden></div>
   </section>
 </div>
 
-<button class="snd" id="snd" aria-pressed="false" type="button"><span class="dot"></span><span id="sndLabel">Rain sound off</span></button>
 <div class="toast" id="toast" role="status"></div>
+<div class="player" id="player" role="dialog" aria-modal="true" aria-label="Video player" hidden>
+  <div class="player-shell" id="player-shell">
+    <video id="episode-video" playsinline preload="metadata"></video>
+    <div class="player-error" id="player-error" role="status" hidden></div>
+    <div class="player-top">
+      <span class="player-name" id="player-name"></span>
+      <button id="player-leave" type="button" aria-label="Close player">✕ Leave</button>
+    </div>
+    <div class="player-controls">
+      <button class="player-play" id="player-play" type="button" aria-label="Play">▶ Play</button>
+      <span class="player-time" id="player-current">0:00</span>
+      <input class="player-seek" id="player-seek" type="range" min="0" max="1000" value="0" aria-label="Seek video">
+      <span class="player-time" id="player-duration">0:00</span>
+      <label class="player-volume-label" for="player-volume">Volume</label>
+      <input class="player-volume" id="player-volume" type="range" min="0" max="1" step="0.05" value="1" aria-label="Volume">
+      <button id="player-fullscreen" type="button">⛶ Fullscreen</button>
+    </div>
+  </div>
+</div>
 
 <script>
 /* ================================================================
@@ -273,14 +327,13 @@ const CONFIG = { owner: 'Cheesetidk', repo: 'Carri' };
 // Folder names that count as the game library (any capitalisation, with or without the s).
 const GAMES_FOLDER = /^assets?$/i;
 
-// Sections shown as tabs. To turn on Movies & Shows later, set enabled:true
-// and the page will scan the matching folder the same way it scans games.
+// Sections shown as tabs. Media is discovered from the repository tree like games.
 const SECTIONS = [
   { id: 'games',  label: 'Games',          folder: GAMES_FOLDER,           enabled: true  },
-  { id: 'movies', label: 'Movies & Shows', folder: /^(movies|shows)$/i,    enabled: false },
+  { id: 'movies', label: 'Movies & Shows', folder: /^media$/i,              enabled: true  },
 ];
 
-const CACHE_KEY = 'cws-tree-v1';
+const CACHE_KEY = 'cws-tree-v2';
 const CACHE_MS  = 5 * 60 * 1000;
 
 /* ================================================================
@@ -323,7 +376,7 @@ async function fetchRepoPaths() {
   let lastErr;
   for (const ref of ['HEAD', 'main', 'master']) {
     try {
-      const r = await fetch(`https://api.github.com/repos/${owner}/${repo}/git/trees/${ref}?recursive=1`, { headers: { Accept: 'application/vnd.github+json' } });
+      const r = await fetch(`https://api.github.com/repos/${owner}/${repo}/git/trees/${ref}?recursive=1`, { headers: { Accept: 'application/vnd.github+json' }, cache: 'no-store' });
       if (!r.ok) { lastErr = new Error('GitHub answered ' + r.status); if (r.status === 403 || r.status === 429) break; continue; }
       const j = await r.json();
       return j.tree.filter(t => t.type === 'blob').map(t => t.path);
@@ -332,10 +385,10 @@ async function fetchRepoPaths() {
   throw lastErr || new Error('Could not reach GitHub');
 }
 
-async function getPaths() {
+async function getPaths(forceRefresh = false) {
   let cached = null;
   try { cached = JSON.parse(localStorage.getItem(CACHE_KEY) || 'null'); } catch {}
-  if (cached && Date.now() - cached.t < CACHE_MS) return cached.paths;
+  if (!forceRefresh && cached && Date.now() - cached.t < CACHE_MS) return cached.paths;
   try {
     const all = await fetchRepoPaths();
     // keep only what we need so the cache stays small
@@ -356,6 +409,7 @@ async function getPaths() {
 const HTML_RX  = /\.html?$/i;
 const IMG_RX   = /\.(png|jpe?g|webp|gif|avif)$/i;
 const COVER_RX = /(^|\/)(cover|thumb|thumbnail|icon|logo|poster|preview|banner)[^/]*\.(png|jpe?g|webp|gif|avif)$/i;
+const VIDEO_RX = /\.(webm|mp4|m4v|mov|ogv)$/i;
 
 function buildGames(paths, folderRx) {
   const files = new Set(paths);
@@ -400,6 +454,48 @@ function buildGames(paths, folderRx) {
     .sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' }));
 }
 
+function buildShows(paths) {
+  const shows = new Map();
+  for (const path of paths) {
+    const parts = path.split('/');
+    if (parts.length < 4 || !/^media$/i.test(parts[0]) || parts.some(part => part.startsWith('.'))) continue;
+    const showPath = parts.slice(0, 2).join('/');
+    if (!shows.has(showPath)) shows.set(showPath, { path: showPath, name: pretty(parts[1]), seasons: new Map() });
+    const show = shows.get(showPath);
+    const seasonName = parts[2];
+    if (!/^(?:s\d+|season[\s._-]*\d+)$/i.test(seasonName)) continue;
+    if (!show.seasons.has(seasonName)) show.seasons.set(seasonName, { name: pretty(seasonName), episodes: new Map() });
+    const season = show.seasons.get(seasonName);
+    let episodeName, videoPath;
+    if (parts.length === 4 && VIDEO_RX.test(parts[3])) {
+      episodeName = pretty(parts[3].replace(VIDEO_RX, ''));
+      videoPath = path;
+    } else if (parts.length >= 5 && VIDEO_RX.test(parts[parts.length - 1])) {
+      episodeName = pretty(parts[3]);
+      videoPath = path;
+    }
+    if (videoPath && !season.episodes.has(episodeName)) season.episodes.set(episodeName, { name: episodeName, path: videoPath });
+  }
+
+  const sortNames = (a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' });
+  return [...shows.values()].map(show => {
+    const basename = show.path.split('/').pop();
+    const root = show.path.split('/')[0];
+    const cover = paths.find(path => {
+      const parts = path.split('/');
+      return parts.length === 2 && parts[0] === root && IMG_RX.test(parts[1]) &&
+        parts[1].replace(IMG_RX, '').toLowerCase() === basename.toLowerCase();
+    }) || paths.find(path => path.startsWith(show.path + '/') && COVER_RX.test(path)) || null;
+    show.cover = cover;
+    show.seasons = [...show.seasons.entries()]
+      .map(([key, season]) => ({ ...season, key, episodes: [...season.episodes.values()].sort((a, b) => sortNames(a.name, b.name)) }))
+      .filter(season => season.episodes.length)
+      .sort((a, b) => sortNames(a.name, b.name));
+    return show;
+  }).filter(show => show.seasons.length)
+    .sort((a, b) => sortNames(a.name, b.name));
+}
+
 /* ================================================================
    LAUNCHING (opens an about:blank tab and loads the game inside it)
    ================================================================ */
@@ -439,7 +535,6 @@ function makeCard(game, i) {
     '<div class="bg"></div>' +
     (game.cover ? '<img class="cover" alt="" loading="lazy" src="' + esc(BASE + enc(game.cover)) + '">' : '') +
     '<div class="initial">' + esc(game.name.trim()[0] || '?') + '</div>' +
-    '<div class="rain"></div>' +
     '<div class="label"><span class="name">' + esc(game.name) + '</span>' +
     '<span class="play"><svg viewBox="0 0 24 24"><path d="M6 4l14 8-14 8z"/></svg></span></div>';
 
@@ -516,115 +611,304 @@ function selectTab(id) {
   tabsEl.querySelectorAll('.tab').forEach(t => t.setAttribute('aria-selected', String(t.dataset.id === id)));
   $('#view-games').hidden = id !== 'games';
   $('#view-movies').hidden = id !== 'movies';
-  $('#search').hidden = id !== 'games';
+  $('#search').hidden = false;
+  $('#search').placeholder = id === 'games' ? 'Search games' : mediaLevel === 'shows' ? 'Search shows' : mediaLevel === 'seasons' ? 'Search seasons' : 'Search episodes';
+  $('#search').setAttribute('aria-label', $('#search').placeholder);
+  if (id === 'games') applyFilter();
+  if (id === 'movies' && !mediaReady) loadMedia();
 }
-$('#search').addEventListener('input', applyFilter);
+$('#search').addEventListener('input', () => {
+  if ($('#view-movies').hidden) applyFilter();
+  else filterMedia();
+});
 
 /* ================================================================
-   RAIN
+   SHOW LIBRARY
    ================================================================ */
-(function rain() {
-  const c = $('#rain'), ctx = c.getContext('2d');
-  let W, H, dpr, drops = [], ripples = [], last = performance.now(), running = true;
-  const WIND = 0.14;
+const mediaGrid = $('#media-grid');
+let mediaShows = [];
+let mediaLevel = 'shows';
+let currentShow = null;
+let currentSeason = null;
+let mediaReady = false;
+let mediaCards = [];
+let playerOpener = null;
+let controlsTimer;
 
-  function mk(initial) {
-    const z = Math.random();
-    return { x: Math.random() * (W + 240) - 120, y: initial ? Math.random() * H : -30, z,
-             len: 10 + z * 24, v: 420 + z * 760, a: .07 + z * .22, land: H * (.62 + .36 * z) + Math.random() * 20 };
-  }
-  function resize() {
-    dpr = Math.min(window.devicePixelRatio || 1, 2);
-    W = innerWidth; H = innerHeight;
-    c.width = W * dpr; c.height = H * dpr;
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    const n = Math.round(W * H / (reduced ? 22000 : 8000));
-    drops = Array.from({ length: Math.min(n, 260) }, () => mk(true));
-  }
-  function frame(t) {
-    if (!running) return;
-    const dt = Math.min((t - last) / 1000, .05); last = t;
-    ctx.clearRect(0, 0, W, H);
-    ctx.lineCap = 'round';
-    for (const d of drops) {
-      d.y += d.v * dt; d.x += d.v * WIND * dt;
-      if (d.y >= d.land) {
-        if (d.z > .35 && ripples.length < 70 && !reduced) ripples.push({ x: d.x, y: d.y, r: 1, max: 14 + d.z * 26, a: .2 * d.z + .05 });
-        Object.assign(d, mk(false));
-        continue;
-      }
-      ctx.strokeStyle = `rgba(178,207,235,${d.a})`;
-      ctx.lineWidth = .5 + d.z * 1.1;
-      ctx.beginPath(); ctx.moveTo(d.x, d.y); ctx.lineTo(d.x - d.len * WIND, d.y - d.len); ctx.stroke();
-    }
-    for (let i = ripples.length - 1; i >= 0; i--) {
-      const r = ripples[i]; r.r += (r.max / 1.1) * dt;
-      const k = r.r / r.max; if (k >= 1) { ripples.splice(i, 1); continue; }
-      ctx.strokeStyle = `rgba(178,207,235,${r.a * (1 - k)})`; ctx.lineWidth = 1;
-      ctx.beginPath(); ctx.ellipse(r.x, r.y, r.r, r.r * .32, 0, 0, Math.PI * 2); ctx.stroke();
-    }
-    requestAnimationFrame(frame);
-  }
-  addEventListener('resize', resize);
-  document.addEventListener('visibilitychange', () => {
-    running = !document.hidden;
-    if (running) { last = performance.now(); requestAnimationFrame(frame); }
+function showMediaNote(html) {
+  const note = $('#media-note');
+  note.innerHTML = html;
+  note.hidden = false;
+}
+
+function makeMediaCard(title, detail, cover, action, index, episode = false) {
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.className = 'card media-card live' + (episode ? ' episode-card' : '');
+  button.dataset.name = (title + ' ' + detail).toLowerCase();
+  button.style.setProperty('--h', hash(title) % 360);
+  button.style.setProperty('--stagger', Math.min(index, 14) * .05 + 's');
+  button.setAttribute('aria-label', `${title}${detail ? ', ' + detail : ''}`);
+  button.innerHTML =
+    '<div class="bg"></div>' +
+    (cover ? '<img class="cover" alt="" loading="lazy" src="' + esc(BASE + enc(cover)) + '">' : '') +
+    '<div class="initial">' + esc(title.trim()[0] || '?') + '</div>' +
+    '<div class="label"><span><span class="name">' + esc(title) + '</span>' +
+    (detail ? '<span class="meta">' + esc(detail) + '</span>' : '') +
+    '</span><span class="play" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 4l14 8-14 8z"/></svg></span></div>';
+  const image = button.querySelector('.cover');
+  if (image) image.addEventListener('error', () => image.remove());
+  button.addEventListener('click', action);
+  button.addEventListener('pointermove', e => {
+    if (e.pointerType !== 'mouse' || reduced) return;
+    const rect = button.getBoundingClientRect();
+    const x = (e.clientX - rect.left) / rect.width, y = (e.clientY - rect.top) / rect.height;
+    button.style.setProperty('--mx', (x * 100) + '%');
+    button.style.setProperty('--my', (y * 100) + '%');
+    button.style.setProperty('--ry', ((x - .5) * 7) + 'deg');
+    button.style.setProperty('--rx', ((.5 - y) * 7) + 'deg');
   });
-  resize(); requestAnimationFrame(frame);
-})();
+  button.addEventListener('pointerleave', () => {
+    button.style.setProperty('--rx', '0deg');
+    button.style.setProperty('--ry', '0deg');
+  });
+  button.addEventListener('animationend', e => { if (e.animationName === 'cardIn') button.classList.remove('live'); });
+  return button;
+}
+
+function renderMedia() {
+  const title = $('#media-title');
+  const back = $('#media-back');
+  mediaGrid.innerHTML = '';
+  $('#media-note').hidden = true;
+  mediaCards = [];
+  let items = [];
+  if (mediaLevel === 'shows') {
+    title.textContent = 'Shows';
+    back.hidden = true;
+    items = mediaShows.map((show, index) => makeMediaCard(show.name, `${show.seasons.length} ${show.seasons.length === 1 ? 'season' : 'seasons'}`, show.cover, () => {
+      $('#search').value = '';
+      currentShow = show;
+      mediaLevel = 'seasons';
+      renderMedia();
+    }, index));
+    if (!items.length) {
+      showMediaNote('<h2>No shows found yet</h2><p class="library-note">Add a show folder under <code>Media/Show Name/</code>, with a sibling poster such as <code>Media/Show Name.jpg</code>. Add episodes under <code>Media/Show Name/S1/Episode 1/video.webm</code>. Use the refresh button after adding files.</p>');
+    }
+  } else if (mediaLevel === 'seasons' && currentShow) {
+    title.textContent = currentShow.name;
+    back.hidden = false;
+    back.textContent = '← Shows';
+    items = currentShow.seasons.map((season, index) => makeMediaCard(season.name, `${season.episodes.length} ${season.episodes.length === 1 ? 'episode' : 'episodes'}`, null, () => {
+      $('#search').value = '';
+      currentSeason = season;
+      mediaLevel = 'episodes';
+      renderMedia();
+    }, index));
+  } else if (mediaLevel === 'episodes' && currentShow && currentSeason) {
+    title.textContent = `${currentShow.name} · ${currentSeason.name}`;
+    back.hidden = false;
+    back.textContent = `← ${currentShow.name}`;
+    items = currentSeason.episodes.map((episode, index) => makeMediaCard(episode.name, 'Play episode', currentShow.cover, () => openPlayer(episode, currentShow, currentSeason), index, true));
+  }
+  mediaCards = items;
+  mediaCards.forEach(card => mediaGrid.appendChild(card));
+  $('#search').placeholder = mediaLevel === 'shows' ? 'Search shows' : mediaLevel === 'seasons' ? 'Search seasons' : 'Search episodes';
+  $('#search').setAttribute('aria-label', $('#search').placeholder);
+  filterMedia();
+}
+
+function filterMedia() {
+  const query = $('#search').value.trim().toLowerCase();
+  let shown = 0;
+  for (const card of mediaCards) {
+    const visible = !query || card.dataset.name.includes(query);
+    card.hidden = !visible;
+    if (visible) shown++;
+  }
+  const total = mediaCards.length;
+  $('#media-count').textContent = total ? (query ? `${shown} of ${total} ${mediaLevel}` : `${total} ${total === 1 ? mediaLevel.slice(0, -1) : mediaLevel}`) : '';
+  if (total && !shown) showMediaNote('<h2>No match</h2><p>Nothing at this level matches that search.</p>');
+  else if (mediaLevel !== 'shows' || total) $('#media-note').hidden = true;
+}
+
+async function loadMedia(forceRefresh = false) {
+  const refresh = $('#media-refresh');
+  refresh.disabled = true;
+  refresh.textContent = '↻ Loading…';
+  try {
+    const paths = await getPaths(forceRefresh);
+    mediaShows = buildShows(paths);
+    mediaReady = true;
+    if (currentShow) currentShow = mediaShows.find(show => show.path === currentShow.path) || null;
+    if (!currentShow) { mediaLevel = 'shows'; currentSeason = null; }
+    else if (currentSeason) currentSeason = currentShow.seasons.find(season => season.key === currentSeason.key) || null;
+    if (!currentSeason && mediaLevel === 'episodes') mediaLevel = 'seasons';
+    renderMedia();
+  } catch (error) {
+    mediaGrid.innerHTML = '';
+    $('#media-count').textContent = '';
+    showMediaNote('<h2>Couldn’t load the media library</h2><p>GitHub didn’t return the file list (' + esc(error.message || 'network error') + '). Check that the repository is public, then refresh.</p>');
+  } finally {
+    refresh.disabled = false;
+    refresh.textContent = '↻ Refresh library';
+  }
+}
+
+$('#media-back').addEventListener('click', () => {
+  if (mediaLevel === 'episodes') {
+    mediaLevel = 'seasons';
+    currentSeason = null;
+  } else {
+    mediaLevel = 'shows';
+    currentShow = null;
+  }
+  $('#search').value = '';
+  renderMedia();
+});
+$('#media-refresh').addEventListener('click', () => loadMedia(true));
 
 /* ================================================================
-   RAIN SOUND (made in the browser, no audio files needed)
+   VIDEO PLAYER
    ================================================================ */
-(function sound() {
-  const btn = $('#snd'), label = $('#sndLabel');
-  let ac, master, on = false;
+const player = $('#player');
+const playerShell = $('#player-shell');
+const playerVideo = $('#episode-video');
+const playerPlay = $('#player-play');
+const playerError = $('#player-error');
 
-  function build() {
-    ac = new (window.AudioContext || window.webkitAudioContext)();
-    master = ac.createGain(); master.gain.value = 0; master.connect(ac.destination);
+function formatTime(seconds) {
+  if (!Number.isFinite(seconds)) return '0:00';
+  const value = Math.max(0, Math.floor(seconds));
+  const hours = Math.floor(value / 3600);
+  const minutes = Math.floor((value % 3600) / 60);
+  const remainder = String(value % 60).padStart(2, '0');
+  return hours ? `${hours}:${String(minutes).padStart(2, '0')}:${remainder}` : `${minutes}:${remainder}`;
+}
 
-    const len = ac.sampleRate * 5;
-    const body = ac.createBuffer(2, len, ac.sampleRate);
-    const patter = ac.createBuffer(2, len, ac.sampleRate);
-    for (let ch = 0; ch < 2; ch++) {
-      const b = body.getChannelData(ch), p = patter.getChannelData(ch);
-      let last = 0;
-      for (let i = 0; i < len; i++) {
-        const w = Math.random() * 2 - 1;
-        last = (last + 0.02 * w) / 1.02; b[i] = last * 3.2;
-        p[i] = w * (Math.random() < .08 ? 1 : .25);
-      }
-      // fade the loop seam so it doesn't click
-      const f = 2000;
-      for (let i = 0; i < f; i++) { const k = i / f; b[i] *= k; b[len - 1 - i] *= k; p[i] *= k; p[len - 1 - i] *= k; }
-    }
-    const mkSrc = (buf, filters, gainVal) => {
-      const s = ac.createBufferSource(); s.buffer = buf; s.loop = true;
-      let node = s; filters.forEach(f => { node.connect(f); node = f; });
-      const g = ac.createGain(); g.gain.value = gainVal; node.connect(g); g.connect(master); s.start();
-      return g;
-    };
-    const lp = ac.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 1400;
-    const bp = ac.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 5200; bp.Q.value = .6;
-    mkSrc(body, [lp], .9);
-    const pg = mkSrc(patter, [bp], .12);
+function updatePlayButton() {
+  const playing = !playerVideo.paused && !playerVideo.ended;
+  playerPlay.textContent = playing ? 'Ⅱ Pause' : '▶ Play';
+  playerPlay.setAttribute('aria-label', playing ? 'Pause' : 'Play');
+}
 
-    // slow swell so it breathes a little
-    const lfo = ac.createOscillator(), lg = ac.createGain();
-    lfo.frequency.value = .07; lg.gain.value = .03; lfo.connect(lg); lg.connect(pg.gain); lfo.start();
+function showPlayerControls() {
+  playerShell.classList.remove('idle');
+  clearTimeout(controlsTimer);
+  if (playerVideo.paused || !playerError.hidden) return;
+  controlsTimer = setTimeout(() => playerShell.classList.add('idle'), 2600);
+}
+
+function openPlayer(episode, show, season) {
+  playerOpener = document.activeElement;
+  $('#player-name').textContent = `${show.name} · ${season.name} · ${episode.name}`;
+  playerError.hidden = true;
+  playerShell.classList.remove('idle');
+  $('#player-current').textContent = '0:00';
+  $('#player-duration').textContent = '0:00';
+  $('#player-seek').value = '0';
+  playerVideo.src = BASE + enc(episode.path);
+  playerVideo.volume = Number($('#player-volume').value);
+  player.hidden = false;
+  document.body.style.overflow = 'hidden';
+  backdrop.pause();
+  $('#player-leave').focus();
+  playerVideo.load();
+  playerVideo.play().catch(() => showPlayerControls());
+}
+
+function closePlayer() {
+  clearTimeout(controlsTimer);
+  player.hidden = true;
+  playerShell.classList.remove('idle');
+  playerVideo.pause();
+  playerVideo.removeAttribute('src');
+  playerVideo.load();
+  playerError.hidden = true;
+  document.body.style.overflow = '';
+  if (!document.hidden) backdrop.play().catch(() => {});
+  if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+  if (playerOpener && playerOpener.isConnected) playerOpener.focus();
+}
+
+playerPlay.addEventListener('click', () => {
+  if (playerVideo.paused) playerVideo.play().catch(() => showPlayerControls());
+  else playerVideo.pause();
+});
+playerVideo.addEventListener('play', () => { updatePlayButton(); showPlayerControls(); });
+playerVideo.addEventListener('pause', () => { updatePlayButton(); showPlayerControls(); });
+playerVideo.addEventListener('ended', () => { updatePlayButton(); showPlayerControls(); });
+playerVideo.addEventListener('loadedmetadata', () => { $('#player-duration').textContent = formatTime(playerVideo.duration); });
+playerVideo.addEventListener('timeupdate', () => {
+  $('#player-current').textContent = formatTime(playerVideo.currentTime);
+  if (Number.isFinite(playerVideo.duration) && playerVideo.duration > 0) {
+    $('#player-seek').value = String(Math.round(playerVideo.currentTime / playerVideo.duration * 1000));
   }
+});
+playerVideo.addEventListener('error', () => {
+  playerError.textContent = 'This video could not be played. Check that the video file is committed and uses a browser-supported codec.';
+  playerError.hidden = false;
+  showPlayerControls();
+});
+$('#player-seek').addEventListener('input', event => {
+  if (Number.isFinite(playerVideo.duration)) playerVideo.currentTime = Number(event.target.value) / 1000 * playerVideo.duration;
+  showPlayerControls();
+});
+$('#player-volume').addEventListener('input', event => {
+  playerVideo.volume = Number(event.target.value);
+  try { localStorage.setItem('cws-player-volume', event.target.value); } catch {}
+  showPlayerControls();
+});
+$('#player-fullscreen').addEventListener('click', () => {
+  if (document.fullscreenElement) document.exitFullscreen().catch(() => toast('Could not leave fullscreen mode.'));
+  else if (playerShell.requestFullscreen) playerShell.requestFullscreen().catch(() => toast('Fullscreen is not available in this browser.'));
+  else toast('Fullscreen is not available in this browser.');
+});
+$('#player-leave').addEventListener('click', closePlayer);
+player.addEventListener('click', event => { if (event.target === player) closePlayer(); });
+playerShell.addEventListener('pointermove', showPlayerControls);
+playerShell.addEventListener('touchstart', showPlayerControls, { passive: true });
+playerVideo.addEventListener('click', () => {
+  if (playerVideo.paused) playerVideo.play().catch(() => showPlayerControls());
+  else playerVideo.pause();
+});
+playerShell.addEventListener('keydown', event => {
+  if (event.target instanceof HTMLInputElement || event.target instanceof HTMLButtonElement) return;
+  if (event.key === ' ' || event.key.toLowerCase() === 'k') {
+    event.preventDefault();
+    playerVideo.paused ? playerVideo.play().catch(() => showPlayerControls()) : playerVideo.pause();
+  } else if (event.key.toLowerCase() === 'f') {
+    $('#player-fullscreen').click();
+  } else if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
+    playerVideo.currentTime = Math.max(0, playerVideo.currentTime + (event.key === 'ArrowLeft' ? -10 : 10));
+    showPlayerControls();
+  }
+});
+document.addEventListener('keydown', event => {
+  if (event.key === 'Escape' && !player.hidden) closePlayer();
+});
+document.addEventListener('fullscreenchange', () => {
+  $('#player-fullscreen').textContent = document.fullscreenElement ? '⛶ Exit fullscreen' : '⛶ Fullscreen';
+});
 
-  btn.addEventListener('click', async () => {
-    if (!ac) build();
-    if (ac.state === 'suspended') await ac.resume();
-    on = !on;
-    master.gain.cancelScheduledValues(ac.currentTime);
-    master.gain.linearRampToValueAtTime(on ? .32 : 0, ac.currentTime + 1.6);
-    btn.setAttribute('aria-pressed', String(on));
-    label.textContent = on ? 'Rain sound on' : 'Rain sound off';
-  });
-})();
+let savedVolume;
+try { savedVolume = localStorage.getItem('cws-player-volume'); } catch {}
+if (savedVolume !== null && Number.isFinite(Number(savedVolume))) {
+  const volume = Math.min(1, Math.max(0, Number(savedVolume)));
+  $('#player-volume').value = String(volume);
+  playerVideo.volume = volume;
+}
+
+/* ================================================================
+   VIDEO BACKGROUND
+   ================================================================ */
+const backdrop = $('#backdrop');
+backdrop.src = BASE + enc('Untitled design.mp4');
+backdrop.addEventListener('error', () => toast('The background video could not be loaded.'));
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) backdrop.pause();
+  else backdrop.play().catch(() => {});
+});
 
 /* ================================================================ */
 selectTab('games');
